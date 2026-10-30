@@ -37,9 +37,9 @@ access-boundary language.
 
 ## Transports
 
-- `CLARKS_TRANSPORT=chrome` is the default and reuses the existing Chrome login
+- `CLARKS_TRANSPORT=chrome` is optional and reuses the existing Chrome login
   through the Chrome MCP bridge.
-- `CLARKS_TRANSPORT=direct` is a public-data mode for Open Minis and other
+- `CLARKS_TRANSPORT=direct` is the default public-data mode for Open Minis and other
   mobile clients that cannot reach a desktop Chrome bridge. It reads public
   Clarksons search APIs and falls back to the Minis browser for restricted
   pages.
@@ -49,8 +49,8 @@ See [MINIS-INSTALL.md](MINIS-INSTALL.md) for the mobile import configuration.
 ## Requirements
 
 - Node.js 20 or newer.
-- Chrome with an authenticated Clarksons tab.
-- The existing Chrome MCP bridge at `http://127.0.0.1:12306/mcp`.
+- For optional chrome mode: Chrome with an authenticated Clarksons tab.
+- For optional chrome mode: the existing Chrome MCP bridge at `http://127.0.0.1:12306/mcp`.
 
 ## Run
 

@@ -8,7 +8,7 @@ const service = require('./clarksons-service.cjs');
 const SERVER_NAME = 'clarksons-sin';
 const SERVER_VERSION = '1.2.0';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
-const transport = String(process.env.CLARKS_TRANSPORT || 'chrome').toLowerCase();
+const transport = String(process.env.CLARKS_TRANSPORT || 'direct').toLowerCase();
 const client = transport === 'direct' ? new DirectClarksonsClient() : new ChromeMcpClient();
 
 const TOOLS = [

@@ -9,18 +9,16 @@ metadata:
 
 Use Clarksons Shipping Intelligence Network as the first data source for shipping and maritime questions when the `clarksons_*` MCP tools are available.
 
-## Browser login workflow (run before query routing)
+## Connection and optional login
 
-Default desktop installations to CLARKS_TRANSPORT=chrome. Use browser session state as the source of truth; do not save a permanent login-completed flag.
+Default to CLARKS_TRANSPORT=direct on every device. Respect explicitly configured chrome mode; never switch a working direct installation to chrome automatically.
 
-1. On first use in each conversation call clarksons_status. If session.authenticated is true, immediately continue the query using the existing Chrome session without another login prompt.
-2. If tools are missing, finish companion MCP and chrome-mcp-server bridge setup using the repository README. If CHROME_BRIDGE_UNREACHABLE is returned, repair the bridge connection before requesting login.
-3. If status reports transport=direct-public or browser.mode=direct, this is public-only mode, not proof that Chrome is logged out. For desktop use, inspect the MCP registration and switch CLARKS_TRANSPORT to chrome while preserving its executable, source path and custom bridge URL. Reload the connection when supported, otherwise request a new Codex session. Respect an explicit direct/mobile preference.
-4. If CLARKS_TAB_NOT_FOUND is returned, use available browser tools to open https://www.clarksons.net.cn/sin/ in the existing regular Chrome profile, then recheck status. If browser tools are unavailable, provide that URL for the user to open. Preserve existing tabs and avoid incognito or isolated profiles.
-5. If browser-mode status reports session.authenticated=false, open or focus the existing Clarksons tab when browser tools are available. On first use say: "请在 Chrome 的克拉克森页面完成登录，完成后告诉我；后续会默认复用该浏览器登录状态。" For an expired session say: "克拉克森登录已失效，请在原浏览器页面重新登录。" Let the user complete login and verification in the website UI. Wait for their completion message rather than repeatedly polling.
-6. After the user confirms completion, call clarksons_status again. Proceed once authentication is confirmed. A public search success is not login evidence. Never request, read, export or store credentials, cookies, tokens or browser profiles.
-7. On subsequent queries reuse the authenticated session; recheck after access failures. If authenticated but data remains restricted, explain subscription entitlement limitations instead of repeating login prompts.
-8. In explicitly selected direct/mobile mode, signing into a browser does not authenticate the direct client. Use available browser tools for restricted pages and label the source separately; otherwise disclose the access limitation.
+1. On first use in each conversation call clarksons_status. If tools are missing, install the companion MCP using the repository README; direct mode requires no browser bridge.
+2. If transport=direct-public or browser.mode=direct, query public data immediately. session.authenticated=false in this mode does not describe the user's browser session. Do not require login before public queries.
+3. When direct access is restricted, provide the public source URL and explain that the user may sign in using their preferred browser. If a connected browser tool can read that browser, use its existing session and label those results as browser-derived. Otherwise ask the user for the relevant page content or disclose the limitation. Browser login never authenticates the direct MCP automatically.
+4. In explicitly selected chrome mode, check the bridge first. CHROME_BRIDGE_UNREACHABLE requires connection repair, not another login. For CLARKS_TAB_NOT_FOUND, use available browser tools to open https://www.clarksons.net.cn/sin/ in the existing regular Chrome profile, or provide that URL if opening is unavailable.
+5. In chrome mode, session.authenticated=true means continue immediately using the existing session. If false, open or focus the existing tab when possible and prompt the user to sign in there. Wait for their completion message, then recheck status. On later queries reuse the session; prompt again only when it expires.
+6. After an access failure, distinguish missing subscription entitlement from expired authentication. Public search success does not establish login. Never request, read, export or store passwords, cookies, tokens or browser profiles.
 
 ## Query routing
 
@@ -41,7 +39,7 @@ Default desktop installations to CLARKS_TRANSPORT=chrome. Use browser session st
 - If `loginRequired`, `accessLimited`, or `LOGIN_REQUIRED` is returned, state the exact limitation. Do not present a homepage synopsis, teaser, or "Please Login" value as full data.
 - `clarksons_article` may return the public title, author, date, and synopsis when full text is restricted. Cite it as a Clarksons summary, not as the full article.
 - `clarksons_timeseries` may contain `Please Login` values when the current session or subscription lacks access.
-- If the user needs restricted data, follow the browser login workflow above: recheck authentication and distinguish expired sessions from missing subscription entitlement.
+- If the user needs restricted data, follow the connection and optional login workflow above: recheck authentication and distinguish expired sessions from missing subscription entitlement.
 - For high-stakes analysis, corroborate Clarksons figures with another primary source and keep source dates, definitions, units, and actual-versus-forecast status explicit.
 
 ## Report the result

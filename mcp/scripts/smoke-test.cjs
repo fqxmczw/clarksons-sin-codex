@@ -5,7 +5,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 
 const serverPath = path.resolve(__dirname, '..', 'src', 'server.cjs');
-const transport = String(process.env.CLARKS_TRANSPORT || 'chrome').toLowerCase();
+const transport = String(process.env.CLARKS_TRANSPORT || 'direct').toLowerCase();
 const child = spawn(process.execPath, [serverPath], {
   stdio: ['pipe', 'pipe', 'pipe'],
   windowsHide: true
