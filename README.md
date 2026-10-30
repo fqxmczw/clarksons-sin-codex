@@ -1,94 +1,142 @@
 # Clarksons SIN for Codex
 
-让 Codex 在查询航运、运费、船舶、船队、船厂、港口及航运市场时优先使用克拉克森 Shipping Intelligence Network，并在回答中保留数据来源、日期、单位及访问限制。
+在其他设备安装后，让 Codex 优先使用克拉克森开展航运研究。首次使用选择是否登录账号；选择登录后，通过已连接的浏览器查询账号有权访问的信息，并在后续会话中复用登录。登录过期才提示重新登录，订阅权限不足单独说明。
 
-本项目包含 **Codex Skill + 8 个只读 MCP 工具**。Skill 决定何时调用数据源，MCP 负责查询；只安装 Skill 不会自动获得数据访问能力。本项目是个人适配工具，并非 Clarksons 官方产品。
+这是个人维护的 Codex Skill 与可选 MCP 适配器，不是 Clarksons 官方产品。
 
-## 跨设备安装
+## 使用体验
 
-需要 Git、Node.js 20+、Python 3 和 Codex CLI。公开仓库可直接克隆。默认使用 direct 模式，不依赖 Chrome 或浏览器桥接。以下命令不会迁移密码、Cookie 或订阅权限。
+1. **首次使用**：Codex 提示“登录并使用账号权限查询”或“暂不登录，仅查询公开信息”，等待你选择。
+2. **选择登录**：连接本设备可用的浏览器，已有登录直接复用；未登录则打开克拉克森，由你在网页完成登录。Codex 检查成功后继续原查询。
+3. **后续使用**：记住访问方式，在同一持久浏览器会话内查询，不反复询问是否登录。
+4. **登录失效**：确认浏览器已退出或跳转登录页后，才提示重新登录。
+5. **订阅不足**：确认账号仍然登录且页面明确限制订阅时，说明哪项内容不可用，不要求重复登录。
 
-### Windows PowerShell
+首次选择保存在本机 `$CODEX_HOME/clarksons-sin/preferences.json`（默认 `~/.codex/clarksons-sin/preferences.json`），仅包含访问方式，不保存账号、Cookie、密码或登录有效性。每台新设备单独选择、单独登录。
+
+## 安装 Skill
+
+需要 Python 3 和具备 Skill 安装能力的 Codex。直接在其他设备的 Codex 中发送：
+
+```text
+请从 https://github.com/fqxmczw/clarksons-sin-codex 安装 skills/clarksons-sin。
+安装完成后按 Skill 的首次使用流程让我选择是否登录；如果选择登录，请检查并使用本设备可连接的持久浏览器会话。
+```
+
+也可使用 Codex 自带的 skill-installer：
+
+**Windows PowerShell**
 
 ```powershell
-git clone https://github.com/fqxmczw/clarksons-sin-codex.git
-Set-Location clarksons-sin-codex
 $codexRoot = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }
 python (Join-Path $codexRoot 'skills/.system/skill-installer/scripts/install-skill-from-github.py') --repo fqxmczw/clarksons-sin-codex --path skills/clarksons-sin
-codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node (Join-Path $PWD 'mcp/src/server.cjs')
-codex mcp list
 ```
 
-### macOS / Linux
+**macOS / Linux**
 
 ```bash
-git clone https://github.com/fqxmczw/clarksons-sin-codex.git
-cd clarksons-sin-codex
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" --repo fqxmczw/clarksons-sin-codex --path skills/clarksons-sin
-codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node "$PWD/mcp/src/server.cjs"
-codex mcp list
 ```
 
-安装器遇到已存在的同名 Skill 会停止，避免覆盖个人修改。如果没有预装 skill-installer，可在 Codex 中说：“请从 fqxmczw/clarksons-sin-codex 的 skills/clarksons-sin 安装 Skill，并按 README 注册 MCP。”
+安装器遇到同名 Skill 会停止，避免覆盖修改。没有预装安装器时使用上面的 Codex 安装指令。开启新会话并提出航运问题，即可触发首次选择。
 
-保留克隆目录：MCP 配置引用其中的源码。安装后开启新的 Codex 会话，让它调用 `clarksons_status`，然后查询 `Panamax`。公开查询成功并不证明订阅数据可访问。
+## 账号查询需要什么
 
-## 两种模式
+**需要 Codex 能实际控制和读取你登录的浏览器。** 普通浏览器里已经登录，不代表 Codex 自动拥有该浏览器连接。
 
-- **direct（默认）**：公开直连，适合没有 Chrome 桥接的设备。支持站内搜索及部分公开内容；新闻列表是搜索结果推导的近似列表，可能只返回文章标题和日期。
-- **chrome（可选）**：通过目标设备上已配置的 chrome-mcp-server 桥接，复用该设备 Chrome 的 Clarksons 登录态。需要桥接服务、已打开的 Clarksons 页面和对应订阅权限，仓库不包含桥接服务。
+| 可用环境 | 账号查询路径 |
+| --- | --- |
+| 已连接的持久浏览器工具，支持当前设备所用浏览器 | Skill 直接操作已登录的网站页面 |
+| Chrome + 已配置的 chrome-mcp-server | 配套 MCP 使用 chrome 模式，复用 Chrome 登录 |
+| 只有 direct MCP，没有浏览器连接 | 只能查询公开信息；选择账号模式后会提示补齐连接 |
+| 浏览器工具仅提供临时或隔离会话 | 不能保证跨会话复用；需配置持久会话并验证 |
 
-默认命令使用 direct 模式。有 Chrome 和已配置的桥接时，才改为 `CLARKS_TRANSPORT=chrome`，并按需设置 `CHROME_MCP_URL`。如果已存在同名配置，先检查配置，再用 `codex mcp remove clarksons-sin` 移除本项目注册项后重新添加。
+Skill 不限定必须使用 Chrome，但**不宣称适配器原生支持任意浏览器**。浏览器支持范围由你连接的工具决定。工具缺失、桥接断开和浏览器验证会单独说明，不冒充登录过期。
 
-受限正文、注册记录、时序数据或浏览器验证可能返回 `LOGIN_REQUIRED`、`accessLimited` 或 `CLARKS_DIRECT_BROWSER_REQUIRED`。请在目标设备浏览器中登录；direct 模式不会因此自动共享浏览器登录态。不要把标题、摘要或 Please Login 当作完整数据。
+## 查询范围
 
-## 工具
+目标是使用账号有权限查看的栏目，而不局限于固定的几个接口：资讯、文章、船舶、公司、船队、船厂、港口、市场指标、历史序列以及可访问的报告和页面。专用工具未覆盖的部分，Skill 会尝试通过已登录网站的页面、筛选、分页及相关下载入口读取。
+
+**登录成功不等于拥有全站订阅，也不保证所有图表、文件和接口都能被工具读取。** 每次以实际页面及数据返回为准；订阅限制、技术上无法读取、部分结果会分别标注。不会把公开摘要包装成订阅全文。
+
+## 可选配套 MCP
+
+本仓库的 MCP 提供 8 个只读工具。它是结构化查询的补充；有可用浏览器工具时，单独安装 Skill 也可通过页面研究。
+
+需要 Git、Node.js 20+、Codex CLI。MCP 无第三方 npm 依赖。
+
+```text
+git clone https://github.com/fqxmczw/clarksons-sin-codex.git
+cd clarksons-sin-codex
+```
+
+### 仅公开查询
+
+PowerShell：
+
+```powershell
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node (Join-Path $PWD 'mcp/src/server.cjs')
+```
+
+macOS / Linux：
+
+```bash
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node "$PWD/mcp/src/server.cjs"
+```
+
+程序未指定模式时仍使用 direct；**Skill 的账号选择不会让 direct 请求自动携带登录状态**。账号模式必须走实际的浏览器连接，不能悄悄回退到公开直连。
+
+### Chrome 桥接账号查询
+
+先在该设备安装并连接 chrome-mcp-server；本仓库不包含或自动安装该扩展。然后注册：
+
+PowerShell：
+
+```powershell
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=chrome --env CHROME_MCP_URL=http://127.0.0.1:12306/mcp -- node (Join-Path $PWD 'mcp/src/server.cjs')
+```
+
+macOS / Linux：
+
+```bash
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=chrome --env CHROME_MCP_URL=http://127.0.0.1:12306/mcp -- node "$PWD/mcp/src/server.cjs"
+```
+
+如已有同名 MCP，先检查原配置并保留自定义路径/桥接地址，再修改传输模式，或移除该项后重新注册。保留克隆目录，配置会引用其中的服务器源码。开启新会话后调用 `clarksons_status` 验证实际连接及登录状态。
 
 | 工具 | 用途 |
 | --- | --- |
-| clarksons_status | 检查连接和访问状态 |
+| clarksons_status | 连接与访问状态 |
 | clarksons_search | 跨栏目搜索 |
-| clarksons_latest_news | 新闻与分析 |
-| clarksons_article | 文章与访问限制 |
-| clarksons_register_search | 船舶、公司、船厂及港口查询 |
-| clarksons_timeseries | 按系列 ID 查询历史数据 |
-| clarksons_market_snapshot | 市场概况，字段取决于访问模式 |
-| clarksons_page | 页面读取，通常需要浏览器模式 |
+| clarksons_latest_news | 新闻列表 |
+| clarksons_article | 文章 |
+| clarksons_register_search | 船舶、公司、船厂、港口 |
+| clarksons_timeseries | 历史序列 |
+| clarksons_market_snapshot | 市场概况 |
+| clarksons_page | 网站页面 |
 
-## 验证与更新
+## 更新、切换与验证
 
-MCP 仅使用 Node.js 内置模块，无需 npm install。
+- 更新 MCP 源码：在克隆目录执行 `git pull --ff-only`。
+- 更新 Skill：更新整个 `skills/clarksons-sin` 文件夹，包括 scripts 和 references，保留个人修改。本机偏好位于 Skill 目录之外，不随升级重置。
+- 切换方式：告诉 Codex“改用登录账号查询”或“只查询公开数据”，Skill 会更新选择。
+- 重新选择：明确要求“重置克拉克森首次使用选择”；重置不清除浏览器登录。
+- 更换设备：偏好和登录不会从 GitHub 同步，需要在新设备重新选择。
+
+本地偏好脚本测试：
+
+```text
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+公开 MCP 在线检查（PowerShell）：
 
 ```powershell
 $env:CLARKS_TRANSPORT='direct'
 node mcp/scripts/smoke-test.cjs
 ```
 
-macOS/Linux：`CLARKS_TRANSPORT=direct node mcp/scripts/smoke-test.cjs`。该测试依赖实时网站及特定文章，网站变化或网络限制可能导致失败。
+在线测试受网络及网站变化影响，公开模式通过不等于账号数据通过。账号流程需在已连接且有权限的浏览器中另行验证。Minis 使用说明见 [移动端配置](mcp/MINIS-INSTALL.md)，同样需要区分公开直连与浏览器账号通道。
 
-更新源码运行 `git pull --ff-only`；已安装 Skill 是独立副本，需要另行更新并保留自己的修改。
-
-Minis 配置及访问限制见 [手机安装说明](mcp/MINIS-INSTALL.md)。其中路径对应原始移动端包；使用本仓库时应按实际解压路径调整配置。
-
-## 数据与凭据
-
-仓库只分发适配代码与指令，不分发订阅内容、账号密码、Cookie、令牌或浏览器配置。数据访问取决于 Clarksons 服务和账号权限。
-
-
-## 首次使用与登录
-
-首次使用先调用 `clarksons_status` 检查连接，再直接查询公开数据。direct 模式不要求安装 Chrome，也不要求先登录；状态中的 `authenticated: false` 表示直连请求没有浏览器登录态，不代表你在浏览器中已经退出。
-
-遇到订阅内容或浏览器验证时，Skill 会提供对应页面，提示在你使用的浏览器中登录。若 Codex 已连接能读取该浏览器的工具，可通过该工具读取页面并复用会话；否则需要你提供页面内容，MCP 会明确说明访问限制。**在浏览器登录不会自动让 direct MCP 获得订阅访问权限。**
-
-只有主动选择 chrome 模式时，才需要 chrome-mcp-server 桥接。该模式会检查 Chrome 会话：未登录提示登录，已登录直接复用，过期才提示重新登录；权限不足与登录失效分开说明。其他浏览器没有被本项目的 chrome 模式直接支持。
-
-## 已安装用户切换到 direct
-
-1. 在仓库目录运行 `git pull --ff-only`。
-2. 将已安装的 Skill 更新为 `skills/clarksons-sin/SKILL.md`，保留你自己的修改。
-3. 检查现有 MCP 配置，将 `CLARKS_TRANSPORT` 改为 `direct`，保留原来的 Node 路径和服务器源码路径。也可移除旧注册项，再按本页安装命令重新注册。
-4. 开启新的 Codex 会话，调用 `clarksons_status`；预期返回 `transport: "direct-public"`。
-
-程序未设置 `CLARKS_TRANSPORT` 时也默认采用 direct。显式配置的 chrome 模式仍然保留。
+仓库仅提供代码和 Skill，不含用户账号、浏览器登录资料或订阅数据。
 
