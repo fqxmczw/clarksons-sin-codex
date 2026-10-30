@@ -6,7 +6,7 @@
 
 ## 跨设备安装
 
-需要 Git、Node.js 20+、Python 3 和 Codex CLI。私有仓库需要先在目标设备配置 GitHub Git 访问权限。以下命令不会迁移密码、Cookie 或订阅权限。
+需要 Git、Node.js 20+、Python 3 和 Codex CLI。公开仓库可直接克隆。默认浏览器模式还需要在目标设备安装并连接 chrome-mcp-server。以下命令不会迁移密码、Cookie 或订阅权限。
 
 ### Windows PowerShell
 
@@ -15,7 +15,7 @@ git clone https://github.com/fqxmczw/clarksons-sin-codex.git
 Set-Location clarksons-sin-codex
 $codexRoot = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }
 python (Join-Path $codexRoot 'skills/.system/skill-installer/scripts/install-skill-from-github.py') --repo fqxmczw/clarksons-sin-codex --path skills/clarksons-sin
-codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node (Join-Path $PWD 'mcp/src/server.cjs')
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=chrome --env CHROME_MCP_URL=http://127.0.0.1:12306/mcp -- node (Join-Path $PWD 'mcp/src/server.cjs')
 codex mcp list
 ```
 
@@ -25,7 +25,7 @@ codex mcp list
 git clone https://github.com/fqxmczw/clarksons-sin-codex.git
 cd clarksons-sin-codex
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" --repo fqxmczw/clarksons-sin-codex --path skills/clarksons-sin
-codex mcp add clarksons-sin --env CLARKS_TRANSPORT=direct -- node "$PWD/mcp/src/server.cjs"
+codex mcp add clarksons-sin --env CLARKS_TRANSPORT=chrome --env CHROME_MCP_URL=http://127.0.0.1:12306/mcp -- node "$PWD/mcp/src/server.cjs"
 codex mcp list
 ```
 
@@ -35,10 +35,10 @@ codex mcp list
 
 ## 两种模式
 
-- **direct**：默认安装示例使用公开直连，适合没有 Chrome 桥接的设备。支持站内搜索及部分公开内容；新闻列表是搜索结果推导的近似列表，可能只返回文章标题和日期。
+- **direct**：可选公开直连，适合没有 Chrome 桥接的设备。支持站内搜索及部分公开内容；新闻列表是搜索结果推导的近似列表，可能只返回文章标题和日期。
 - **chrome**：通过目标设备上已配置的 chrome-mcp-server 桥接，复用该设备 Chrome 的 Clarksons 登录态。需要桥接服务、已打开的 Clarksons 页面和对应订阅权限，仓库不包含桥接服务。
 
-已配置 Chrome 桥接后，可将上面注册命令中的 `CLARKS_TRANSPORT=direct` 改为 `CLARKS_TRANSPORT=chrome`，并添加 `--env CHROME_MCP_URL=http://127.0.0.1:12306/mcp`。如果已存在同名配置，先检查配置，再用 `codex mcp remove clarksons-sin` 移除本项目注册项后重新添加。
+默认命令已使用 chrome 模式。仅需公开数据时，可改为 `CLARKS_TRANSPORT=direct`。如果已存在同名配置，先检查配置，再用 `codex mcp remove clarksons-sin` 移除本项目注册项后重新添加。
 
 受限正文、注册记录、时序数据或浏览器验证可能返回 `LOGIN_REQUIRED`、`accessLimited` 或 `CLARKS_DIRECT_BROWSER_REQUIRED`。请在目标设备浏览器中登录；direct 模式不会因此自动共享浏览器登录态。不要把标题、摘要或 Please Login 当作完整数据。
 
@@ -73,4 +73,13 @@ Minis 配置及访问限制见 [手机安装说明](mcp/MINIS-INSTALL.md)。其�
 ## 数据与凭据
 
 仓库只分发适配代码与指令，不分发订阅内容、账号密码、Cookie、令牌或浏览器配置。数据访问取决于 Clarksons 服务和账号权限。
+
+
+## 首次使用与登录复用
+
+首次使用先检查浏览器登录状态；未登录则提示在克拉克森页面手动登录，完成后重新检查。已登录直接查询，后续复用同一 Chrome 会话，过期才提示重新登录。订阅权限不足单独说明。
+
+Chrome 桥接需另行安装并连接常用浏览器，本仓库不会自动安装扩展。手机 Minis 保持 direct 模式，不能共享桌面登录态。
+
+已有安装需要更新已安装的 Skill 副本，并将 MCP 的 CLARKS_TRANSPORT 改为 chrome，保留原有源码路径和自定义桥接地址，然后开启新 Codex 会话。
 
