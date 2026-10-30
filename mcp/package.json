@@ -1,0 +1,15 @@
+{
+  "name": "clarksons-sin-mcp",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Read-only MCP adapter for the Clarksons Shipping Intelligence Network using an existing Chrome login session.",
+  "main": "src/server.cjs",
+  "scripts": {
+    "start": "node src/server.cjs",
+    "smoke": "node scripts/smoke-test.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+

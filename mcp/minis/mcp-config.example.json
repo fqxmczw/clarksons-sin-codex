@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "clarksons-sin": {
+      "command": "node",
+      "args": [
+        "/var/minis/skills/clarksons-sin-mcp/src/server.cjs"
+      ],
+      "env": {
+        "CLARKS_TRANSPORT": "direct"
+      }
+    }
+  }
+}
+
