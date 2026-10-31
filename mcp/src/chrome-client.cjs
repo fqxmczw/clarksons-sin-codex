@@ -1,4 +1,5 @@
 'use strict';
+const { pageExtractionCode } = require('./privacy.cjs');
 
 const DEFAULT_ENDPOINT = process.env.CHROME_MCP_URL || 'http://127.0.0.1:12306/mcp';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
@@ -361,20 +362,15 @@ class ChromeMcpClient {
   }
 
   async getWebContent(url, options = {}) {
-    const outer = await this.toolJson('chrome_get_web_content', {
-      url,
-      tabId: options.tabId,
-      background: true,
-      textContent: options.textContent !== false,
-      htmlContent: options.htmlContent === true,
-      ...(options.selector ? { selector: options.selector } : {})
-    });
+    const outer = await this.javascript(
+      pageExtractionCode(options.selector || 'body'), options.tabId
+    );
 
     if (!outer.success) {
       throw new BrowserBridgeError(
         'CHROME_CONTENT_ERROR',
         outer.error?.message || 'Chrome page content extraction failed.',
-        { outer }
+        {}
       );
     }
 

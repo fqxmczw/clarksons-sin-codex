@@ -4,6 +4,7 @@ const readline = require('node:readline');
 const { ChromeMcpClient, BrowserBridgeError } = require('./chrome-client.cjs');
 const { DirectClarksonsClient } = require('./direct-client.cjs');
 const service = require('./clarksons-service.cjs');
+const { sanitizeOutput } = require('./privacy.cjs');
 
 const SERVER_NAME = 'clarksons-sin';
 const SERVER_VERSION = '1.2.0';
@@ -276,6 +277,7 @@ function send(message) {
 }
 
 function sendResult(id, result, isError = false) {
+  result = sanitizeOutput(result);
   send({
     jsonrpc: '2.0',
     id,
@@ -298,8 +300,8 @@ function sendError(id, code, message, data = undefined) {
     id,
     error: {
       code,
-      message,
-      ...(data === undefined ? {} : { data })
+      message: sanitizeOutput(message),
+      ...(data === undefined ? {} : { data: sanitizeOutput(data) })
     }
   });
 }
@@ -360,8 +362,8 @@ async function handleRequest(message) {
           {
             ok: false,
             errorCode: error.code,
-            message: error.message,
-            details: error.details,
+            message: 'Clarksons request failed. Check errorCode and the connection or access state.',
+            details: { status: error.details?.status || null },
             action:
               error.code === 'CLARKS_TAB_NOT_FOUND'
                 ? 'Open https://www.clarksons.net.cn/sin/ in Chrome and sign in.'
@@ -377,7 +379,7 @@ async function handleRequest(message) {
           {
             ok: false,
             errorCode: 'INTERNAL_ERROR',
-            message: error.message
+            message: 'Unexpected error while querying Clarksons.'
           },
           true
         );
@@ -426,12 +428,12 @@ function start() {
     try {
       message = JSON.parse(trimmed);
     } catch (error) {
-      process.stderr.write(`Invalid MCP JSON: ${error.message}\n`);
+      process.stderr.write('Invalid MCP JSON\n');
       return;
     }
 
     handleRequest(message).catch((error) => {
-      process.stderr.write(`MCP request failed: ${error.stack || error.message}\n`);
+      process.stderr.write('MCP request failed\n');
       if (message.id !== undefined) {
         sendError(message.id, -32603, 'Internal server error');
       }

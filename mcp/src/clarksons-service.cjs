@@ -42,7 +42,6 @@ async function getStatus(client) {
       },
       session: {
         authenticated: false,
-        accountLabel: null,
         searchAccess: searchAccess.accessible,
         searchAccessEvidence: searchAccess.evidence,
         loginMarker: true,
@@ -66,7 +65,6 @@ async function getStatus(client) {
         return {
           url: location.href,
           title: document.title,
-          account: user && user.GreetingName ? user.GreetingName : null,
           authFlag: user && user.IsAuthenticated ? 1 : 0,
           logoutMarker: /Logout|注销/i.test(text) ? 1 : 0,
           loginMarker: /Login \\/ Sign up|登录 \\/注册/i.test(text) ? 1 : 0,
@@ -99,7 +97,6 @@ async function getStatus(client) {
     },
     session: {
       authenticated,
-      accountLabel: result.page.account || null,
       searchAccess: searchAccess.accessible,
       searchAccessEvidence: searchAccess.evidence,
       loginMarker: result.page.detectedLoginMarker === 1,

@@ -85,6 +85,7 @@ async function main() {
     })
   );
   assert.equal(status.ok, true);
+  assert.equal(Object.hasOwn(status.session, 'accountLabel'), false);
   if (transport === 'direct') {
     assert.equal(status.browser.mode, 'direct');
   } else {

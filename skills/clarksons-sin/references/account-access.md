@@ -4,7 +4,7 @@
 
 At the beginning of an account research session, discover the connected browser and any browser-mode Clarksons MCP. Reuse the user's persistent regular profile and existing Clarksons tab. Avoid temporary/incognito contexts that discard login. If a saved connection is unavailable, report connection failure; it is not a login-expiry signal.
 
-With browser-mode MCP, call clarksons_status. Verify it is not transport=direct-public or browser.mode=direct. With native browser tools, inspect the visible Clarksons account/header and login state. Account/logout indicators and protected page access are stronger evidence than public search results.
+With browser-mode MCP, call clarksons_status. Verify it is not transport=direct-public or browser.mode=direct. With native browser tools, inspect login/logout indicators in the page but return only booleans; do not return the account header, display name or a full screenshot. Login/logout indicators and protected page access are stronger evidence than public search results. Follow the SKILL.md data-minimization procedure before returning page content.
 
 If the companion MCP is configured as direct and a working compatible Chrome bridge is present, configure it for chrome only as part of the user's chosen account setup. Preserve executable/path/custom bridge settings, reload the connection if possible, and verify again. Otherwise use the connected browser directly. Changing an environment variable alone does not establish a working authenticated channel.
 
